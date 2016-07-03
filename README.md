@@ -30,6 +30,14 @@ Click and drag the mouse to define the trigger (pressure plate). Color, and coun
 
 Click and drag the mouse to define the button. Color, and count can be changed with the edit tool.
 
+#### Export
+
+Currently supports 2 formats, kc9zda and eldit, for each of their servers, as they have a slightly different map format. See zdalvlformat.txt for the kc9zda level format.
+
+#### Edit
+
+Click on the map, and the side panel should have all objects that are at the location of the click. Objects update upon changing fields.
+
 ### Installation
 
-Simply clone or download the repository, then navigate to index.html of that directory on the server.
+Simply clone or download the repository, then navigate to index.html. This will work without a webserver, just go to your file explorer and open index.html.
