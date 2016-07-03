@@ -56,18 +56,23 @@ function render_objs() {
 
 function render_object(i) {
 	var o = lvldata.objects[i];
-
+	var c;
 	
 	switch(o.type) {
 		case "text":
+			fixTextBox(o);
 			ctx.save();
 			ctx.font = o.textHeight+"px NovaSquare";
+			c = o.x;
+			o.isCentered && (c -= ctx.measureText(o.text).width / 4);
 			ctx.fillStyle="#000";
-			ctx.fillText(o.text,o.x*2,(o.y+o.textHeight)*2);
+			ctx.fillText(o.text,c*2,o.y*2);
 			ctx.restore();
 			ctx.save();
 			ctx.strokeStyle="#000";
-			ctx.strokeRect(o.x*2,o.y*2,o.width*2,o.height*2);
+			ctx.strokeRect(o.bb.x1*2,o.bb.y1*2,((o.bb.x2*2)-(o.bb.x1*2)),((o.bb.y2*2)-(o.bb.y1*2)));
+			ctx.restore();
+			ctx.save();
 			ctx.restore();
 			break;
 		case "wall":
@@ -272,6 +277,9 @@ function checkBB(obj,x,y) {
 	var rect1 = {x: obj.x, y: obj.y, width: obj.width, height: obj.height};
 	var rect2 = {x: x, y: y, width: 1, height: 1};
 
+	if (obj.bb!= undefined) {
+		rect1 = {x: obj.bb.x1, y: obj.bb.y1, width: obj.bb.x2-obj.bb.x1, height: obj.bb.y2-obj.bb.y1};
+		}
 	if (rect1.x < rect2.x + rect2.width &&
 	rect1.x + rect1.width > rect2.x &&
 	rect1.y < rect2.y + rect2.height &&
@@ -336,6 +344,7 @@ function getPropertiesPanel(i) {
 			s+="Y: "+createPropNumberBox(i,'y',true)+"<br>";
 			s+="Text Height: "+createPropNumberBox(i,'textHeight')+"<br>";
 			s+="Text: "+createPropTextBox(i,'text')+"<br>";
+			s+="Centered: "+createPropCheckbox(i,'isCentered');+"<br>";
 			break;
 		case "wall":
 			s+="X: "+createPropNumberBox(i,'x')+"<br>";
@@ -443,10 +452,10 @@ function createTextObj(x,y) {
 	obj.type = "text";
 	obj.text = "Sample Text";
 	obj.textHeight = 20;
-	obj.height = 30
-	obj.width = getTxtWidth(20,obj.text);
+	obj.width = getTxtWidth(obj.textHeight,obj.text);
 	obj.x = x;
-	obj.y = y-obj.textHeight;
+	obj.y = y;
+	obj.bb = {x1: obj.x, y1: obj.y-obj.textHeight, x2: obj.x+obj.width, y2: obj.y};
 	obj.isCentered = false;
 	addObject(obj);
 	}
@@ -484,4 +493,192 @@ function render_preview() {
 			ctx.restore();
 			break;
 		}
+	}
+
+function expMap() {
+	var s = "";
+
+	s+=createButton("kc9zda Format","em('kc9zda');",false,"default")+"<br>";
+	s+=createButton("eldit Format","em('eldit');",false,"default")+"<br>";
+	s=createPanel("Export Map",s,"exportpan",{nbm: true});
+	si("objinfo",s);
+	}
+
+function em(f) {
+	var o = {};
+	var readyForExport = false;
+	switch(f) {
+		case 'kc9zda':
+			o.spawn = {};
+			o.spawn.x = lvldata.spawn.x;
+			o.spawn.y = lvldata.spawn.y;
+			o.objects = [];
+			for (var i=0;i<lvldata.objects.length;i++) {
+				switch(lvldata.objects[i].type) {
+					case "text":
+						o.objects[i]={};
+						o.objects[i].type = 0;
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].textHeight = lvldata.objects[i].textHeight;
+						o.objects[i].isCentered = lvldata.objects[i].isCentered;
+						o.objects[i].text = lvldata.objects[i].text;
+						break;
+					case "wall":
+						o.objects[i]={};
+						o.objects[i].type = 1;
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].width = lvldata.objects[i].width;
+						o.objects[i].height = lvldata.objects[i].height;
+						o.objects[i].color = {};
+						o.objects[i].color.r = lvldata.objects[i].color.r;
+						o.objects[i].color.g = lvldata.objects[i].color.g;
+						o.objects[i].color.b = lvldata.objects[i].color.b;
+						o.objects[i].color.a = lvldata.objects[i].color.a;
+						break;
+					case "exit":
+						o.objects[i]={};
+						o.objects[i].type = 2;
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].width = lvldata.objects[i].width;
+						o.objects[i].height = lvldata.objects[i].height;
+						o.objects[i].dst = lvldata.objects[i].dst;
+						break;
+					case "pressureplate":
+						o.objects[i]={};
+						o.objects[i].type = 3;
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].width = lvldata.objects[i].width;
+						o.objects[i].height = lvldata.objects[i].height;
+						o.objects[i].color = {};
+						o.objects[i].color.r = lvldata.objects[i].color.r;
+						o.objects[i].color.g = lvldata.objects[i].color.g;
+						o.objects[i].color.b = lvldata.objects[i].color.b;
+						o.objects[i].color.a = lvldata.objects[i].color.a;
+						o.objects[i].count = lvldata.objects[i].count;
+						break;
+					case "button":
+						o.objects[i]={};
+						o.objects[i].type = 4;
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].width = lvldata.objects[i].width;
+						o.objects[i].height = lvldata.objects[i].height;
+						o.objects[i].color = {};
+						o.objects[i].color.r = lvldata.objects[i].color.r;
+						o.objects[i].color.g = lvldata.objects[i].color.g;
+						o.objects[i].color.b = lvldata.objects[i].color.b;
+						o.objects[i].color.a = lvldata.objects[i].color.a;
+						o.objects[i].count = lvldata.objects[i].count;
+						break;
+					}
+				}
+			o.lvlname = lvldata.lvlname;
+			readyForExport = true;
+			break;
+		case 'eldit':
+			o.startpos = {};
+			o.startpos.x = lvldata.spawn.x;
+			o.startpos.y = lvldata.spawn.y;
+			o.objects = [];
+			for (var i=0;i<lvldata.objects.length;i++) {
+				switch(lvldata.objects[i].type) {
+					case "text": // n/a atm for eldit format
+						o.objects[i]={};
+						//o.objects[i].type = "text";
+						//o.objects[i].x = lvldata.objects[i].x;
+						//o.objects[i].y = lvldata.objects[i].y;
+						//o.objects[i].textSize = lvldata.objects[i].textHeight;
+						//o.objects[i].isCentered = lvldata.objects[i].isCentered;
+						//o.objects[i].text = lvldata.objects[i].text;
+						break;
+					case "wall":
+						o.objects[i]={};
+						o.objects[i].type = "wall";
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].w = lvldata.objects[i].width;
+						o.objects[i].h = lvldata.objects[i].height;
+						o.objects[i].color = eldit_color(lvldata.objects[i].color);
+						break;
+					case "exit":
+						o.objects[i]={};
+						o.objects[i].type = "exit";
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].w = lvldata.objects[i].width;
+						o.objects[i].h = lvldata.objects[i].height;
+						break;
+					case "pressureplate": //n/a atm for eldit format
+						o.objects[i]={};
+						//o.objects[i].type = 3;
+						//o.objects[i].x = lvldata.objects[i].x;
+						//o.objects[i].y = lvldata.objects[i].y;
+						//o.objects[i].width = lvldata.objects[i].width;
+						//o.objects[i].height = lvldata.objects[i].height;
+						//o.objects[i].color = {};
+						//o.objects[i].color.r = lvldata.objects[i].color.r;
+						//o.objects[i].color.g = lvldata.objects[i].color.g;
+						//o.objects[i].color.b = lvldata.objects[i].color.b;
+						//o.objects[i].color.a = lvldata.objects[i].color.a;
+						//o.objects[i].count = lvldata.objects[i].count;
+						break;
+					case "button":
+						o.objects[i]={};
+						o.objects[i].type = "button";
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].w = lvldata.objects[i].width;
+						o.objects[i].h = lvldata.objects[i].height;
+						o.objects[i].color = eldit_color(lvldata.objects[i].color);
+						o.objects[i].count = lvldata.objects[i].count;
+						break;
+					}
+				}
+			readyForExport = true;
+			break;
+		}
+	if (readyForExport) {
+		var msg = "";
+		var md = JSON.stringify(o);
+		switch (f) {
+			case 'kc9zda':
+				msg="Add this to a new, empty text file, and save as a .zda file";
+				break;
+			case 'eldit':
+				msg="Add this to the JSON array in maps.json";
+				break;
+			}
+		si("exportpancont",msg+"<br><code>"+md+"</code>");
+		}
+	}
+
+var hexChar = ["0", "1", "2", "3", "4", "5", "6", "7","8", "9", "A", "B", "C", "D", "E", "F"];
+
+function byteToHex(b) {
+  return hexChar[(b >> 4) & 0x0f] + hexChar[b & 0x0f];
+}
+
+function eldit_color(c) {
+	var s = byteToHex(c.r)+byteToHex(c.g)+byteToHex(c.b)+byteToHex(c.a);
+
+	return s;
+	}
+
+function createPropCheckbox(i,f) {
+	return "<input type=\"checkbox\" id=\"obj"+i+"prop"+f+"\" "+(lvldata.objects[i][f]?"checked":"")+" onchange=\"pcbc("+i+",'"+f+"')\">";
+	}
+
+function pcbc(i,f) {
+	var v = ge("obj"+i+"prop"+f).checked;
+
+	lvldata.objects[i][f] = v;
+	}
+
+function fixTextBox(obj) {
+	obj.width = getTxtWidth(obj.textHeight,obj.text);
+	obj.bb = {x1: obj.x, y1: obj.y-obj.textHeight, x2: obj.x+obj.width, y2: obj.y};
 	}
