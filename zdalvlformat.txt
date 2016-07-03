@@ -1,0 +1,23 @@
+Level Format
+
+root - Root Level Object
+	objects - array of map objects
+		type - object type
+		X - object X position
+		Y - object Y position
+		(text) textHeight - height of text
+		(text) isCentered - boolean that tells the client to center the text
+		(text) text - string to be displayed
+		(wall,exit,pressureplate,button) width - width of object
+		(wall,exit,pressureplate,button) height - height of object
+		(wall,pressureplate,button) color - RGBA object for the color of the wall
+			r - red
+			g - green
+			b - blue
+			a - alpha
+		(pressureplate,button) count - players/clicks needed to activated
+		(exit) dst - destination map
+	spawn - spawn position
+		x - X
+		y - Y
+	lvlname - level name
