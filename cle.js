@@ -583,17 +583,18 @@ function em(f) {
 			o.startpos = {};
 			o.startpos.x = lvldata.spawn.x;
 			o.startpos.y = lvldata.spawn.y;
+			o.tag = lvldata.lvlname;
 			o.objects = [];
 			for (var i=0;i<lvldata.objects.length;i++) {
 				switch(lvldata.objects[i].type) {
-					case "text": // n/a atm for eldit format
+					case "text": 
 						o.objects[i]={};
-						//o.objects[i].type = "text";
-						//o.objects[i].x = lvldata.objects[i].x;
-						//o.objects[i].y = lvldata.objects[i].y;
-						//o.objects[i].textSize = lvldata.objects[i].textHeight;
-						//o.objects[i].isCentered = lvldata.objects[i].isCentered;
-						//o.objects[i].text = lvldata.objects[i].text;
+						o.objects[i].type = "text";
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].size = lvldata.objects[i].textHeight;
+						o.objects[i].centered = lvldata.objects[i].isCentered;
+						o.objects[i].string = lvldata.objects[i].text;
 						break;
 					case "wall":
 						o.objects[i]={};
@@ -612,19 +613,15 @@ function em(f) {
 						o.objects[i].w = lvldata.objects[i].width;
 						o.objects[i].h = lvldata.objects[i].height;
 						break;
-					case "pressureplate": //n/a atm for eldit format
+					case "pressureplate":
 						o.objects[i]={};
-						//o.objects[i].type = 3;
-						//o.objects[i].x = lvldata.objects[i].x;
-						//o.objects[i].y = lvldata.objects[i].y;
-						//o.objects[i].width = lvldata.objects[i].width;
-						//o.objects[i].height = lvldata.objects[i].height;
-						//o.objects[i].color = {};
-						//o.objects[i].color.r = lvldata.objects[i].color.r;
-						//o.objects[i].color.g = lvldata.objects[i].color.g;
-						//o.objects[i].color.b = lvldata.objects[i].color.b;
-						//o.objects[i].color.a = lvldata.objects[i].color.a;
-						//o.objects[i].count = lvldata.objects[i].count;
+						o.objects[i].type = "area";
+						o.objects[i].x = lvldata.objects[i].x;
+						o.objects[i].y = lvldata.objects[i].y;
+						o.objects[i].w = lvldata.objects[i].width;
+						o.objects[i].h = lvldata.objects[i].height;
+						o.objects[i].color = eldit_color(lvldata.objects[i].color);
+						o.objects[i].count = lvldata.objects[i].count;
 						break;
 					case "button":
 						o.objects[i]={};

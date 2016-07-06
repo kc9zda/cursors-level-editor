@@ -1,6 +1,6 @@
 ## Cursors Level Editor
 
-This page/utility allows the user to create cursors.io levels. There are no abilities to export the map yet, as I need to find a suitable format. I will support my JSON format for my Node.js cursors server, in the near future
+This page/utility allows the user to create cursors.io levels.
 
 ### How to use the editor
 
@@ -37,6 +37,12 @@ Currently supports 2 formats, kc9zda and eldit, for each of their servers, as th
 #### Edit
 
 Click on the map, and the side panel should have all objects that are at the location of the click. Objects update upon changing fields.
+
+### Format Limitations
+
+#### eldit Format
+
+Currently, the field that tells the server what level to exit to is not yet implemented.
 
 ### Installation
 
