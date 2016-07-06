@@ -57,6 +57,11 @@ div { display:inline-block; }
   color: #888;
   cursor: pointer;
 }
+
+#objinfo {
+  height: 600px;
+  overflow-y: scroll;
+}
 </style>
 </head>
 <body onload="init();">
@@ -73,6 +78,8 @@ div { display:inline-block; }
 <li><button class="btn btn-default" id="tbutton" onclick="tool('button');">Button</button></li>
 <li><span id="cpos"></span></li>
 <li><button class="btn btn-default" id="texport" onclick="expMap();">Export</button></li>
+<li><button class="btn btn-default" id="timport" onclick="impMap();">Import</button></li>
+<li><button class="btn btn-default" id="tmaps" onclick="showMaps();">Map List</button></li>
 </ul>
 </div>
 <br>

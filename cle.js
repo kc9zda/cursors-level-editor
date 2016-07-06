@@ -1,9 +1,15 @@
-var canvas,ctx,lvldata={objects: [], spawn: {x:200, y:150}, lvlname: "no-name"},oldX,oldY,curX,curY,rcurX,rcurY,curTool="none",mdwn=false,tempdata={},hfNames={},colors=[];
+var canvas,ctx,lvldata={objects: [], spawn: {x:200, y:150}, lvlname: "no-name"},oldX,oldY,curX,curY,rcurX,rcurY,curTool="none",mdwn=false,tempdata={},hfNames={},colors=[],zdaTypes=[],emd={};
 
 colors[0] = colobj(0,0,0,0);
 colors[1] = colobj(255,0,0,0);
 colors[2] = colobj(0,0,255,0);
 colors[3] = colobj(0,255,255,0);
+
+zdaTypes[0] = "text";
+zdaTypes[1] = "wall";
+zdaTypes[2] = "exit";
+zdaTypes[3] = "pressureplate";
+zdaTypes[4] = "button";
 
 function init() {
 	hfNames["text"]="Text";
@@ -136,6 +142,9 @@ function rn() {
 
 function updateLvlName() {
 	si("lvlname","<h4 onclick=\"rename();\">"+lvldata.lvlname+"</h4>");
+	if (emd.valid&&mapsShown) {
+		showMaps();
+		}
 	}
 
 function tool(id) {
@@ -334,6 +343,7 @@ function inspectItems() {
 		c+="<br>";
 		}
 	si("objinfo",createPanel("Objects at ("+inspectX+","+inspectY+")",c,"objpan",{nbm: true}));
+	mapsShown = false;
 	}
 
 function getPropertiesPanel(i) {
@@ -502,6 +512,7 @@ function expMap() {
 	s+=createButton("eldit Format","em('eldit');",false,"default")+"<br>";
 	s=createPanel("Export Map",s,"exportpan",{nbm: true});
 	si("objinfo",s);
+	mapsShown = false;
 	}
 
 function em(f) {
@@ -678,4 +689,215 @@ function pcbc(i,f) {
 function fixTextBox(obj) {
 	obj.width = getTxtWidth(obj.textHeight,obj.text);
 	obj.bb = {x1: obj.x, y1: obj.y-obj.textHeight, x2: obj.x+obj.width, y2: obj.y};
+	}
+
+function impMap() {
+	var s = "";
+
+	s+="<textarea id=\"imd\"></textarea><br>";
+	s+=createButton("kc9zda Format","im('kc9zda');",false,"default")+"<br>";
+	s+=createButton("eldit Format","im('eldit');",false,"default")+"<br>";
+	s+=createButton("Auto-detect","imauto();",false,"default")+"<br>";
+	s=createPanel("Import Map",s,"importpan",{nbm: true});
+	si("objinfo",s);
+	mapsShown = false;
+	}
+
+function im(f) {
+	var tmp;
+
+	emd.valid=false;
+	try {
+		tmp = JSON.parse(gv("imd"));
+		} catch (e) {
+		clog(e);
+		si("importpancont",createAlert("danger","Unable to parse map data"));
+		}
+	if (tmp!=undefined) {
+		switch(f) {
+			case 'kc9zda':
+				lvldata = tmp;
+				for (var i=0;i<lvldata.objects.length;i++) {
+					lvldata.objects[i].type = zdaTypes[lvldata.objects[i].type];
+					}
+				updateLvlName();
+				break;
+			case 'eldit':
+				decode_eldit_map(tmp);
+				break;
+			}
+		}
+	}
+
+function imauto() {
+	var tmp;
+
+	try {
+		tmp = JSON.parse(gv("imd"));
+		} catch (e) {
+		clog(e);
+		si("importpancont",createAlert("danger","Unable to parse map data"));
+		}
+	if (tmp!=undefined) {
+		if (tmp.spawn!=undefined) {
+			im('kc9zda');
+			}
+		if (tmp.startpos!=undefined) {
+			im('eldit');
+			}
+		}
+	}
+
+function eldit_color_decode(c) {
+	var rh = c.substring(0,2);
+	var gh = c.substring(2,4);
+	var bh = c.substring(4,6);
+	var ah = c.substring(6,8);
+	var o = {};
+
+	o.r = hex_decode(rh);
+	o.g = hex_decode(gh);
+	o.b = hex_decode(bh);
+	if (c.length==8) o.a = hex_decode(ah);
+	return o;
+	}
+
+function hex_decode(h) {
+	return parseInt(h,16);
+	}
+
+
+function decode_eldit_map(d) {
+	var t = [];
+	emd = {};
+	emd.valid=true;
+	emd.ld = [];
+	if (!(d instanceof Array)) {
+		t[0] = d;
+		d = t;
+		}
+	for (var n=0;n<d.length;n++) {
+		emd.ld[n] = {};
+		emd.ld[n].spawn = {};
+		emd.ld[n].spawn.x = d[n].startpos.x;
+		emd.ld[n].spawn.y = d[n].startpos.y;
+		emd.ld[n].lvlname = d[n].tag;
+		emd.ld[n].objects = [];
+		for (var i=0;i<d[n].objects.length;i++) {
+			switch(d[n].objects[i].type) {
+				case "text":
+					emd.ld[n].objects[i]={};
+					emd.ld[n].objects[i].type = "text";
+					emd.ld[n].objects[i].x = d[n].objects[i].x;
+					emd.ld[n].objects[i].y = d[n].objects[i].y;
+					emd.ld[n].objects[i].textHeight = d[n].objects[i].size;
+					emd.ld[n].objects[i].isCentered = d[n].objects[i].centered;
+					emd.ld[n].objects[i].text = d[n].objects[i].string;
+					break;
+				case "wall":
+					emd.ld[n].objects[i]={};
+					emd.ld[n].objects[i].type = "wall";
+					emd.ld[n].objects[i].x = d[n].objects[i].x;
+					emd.ld[n].objects[i].y = d[n].objects[i].y;
+					emd.ld[n].objects[i].width = d[n].objects[i].w;
+					emd.ld[n].objects[i].height = d[n].objects[i].h;
+					emd.ld[n].objects[i].color = eldit_color_decode(d[n].objects[i].color);
+					break;
+				case "exit":
+					emd.ld[n].objects[i]={};
+					emd.ld[n].objects[i].type = "exit";
+					emd.ld[n].objects[i].x = d[n].objects[i].x;
+					emd.ld[n].objects[i].y = d[n].objects[i].y;
+					emd.ld[n].objects[i].width = d[n].objects[i].w;
+					emd.ld[n].objects[i].height = d[n].objects[i].h;
+					break;
+				case "area":
+					emd.ld[n].objects[i]={};
+					emd.ld[n].objects[i].type = "pressureplate";
+					emd.ld[n].objects[i].x = d[n].objects[i].x;
+					emd.ld[n].objects[i].y = d[n].objects[i].y;
+					emd.ld[n].objects[i].width = d[n].objects[i].w;
+					emd.ld[n].objects[i].height = d[n].objects[i].h;
+					emd.ld[n].objects[i].color = eldit_color_decode(d[n].objects[i].color);
+					emd.ld[n].objects[i].count = d[n].objects[i].count;
+					break;
+				case "button":
+					emd.ld[n].objects[i]={};
+					emd.ld[n].objects[i].type = "button";
+					emd.ld[n].objects[i].x = d[n].objects[i].x;
+					emd.ld[n].objects[i].y = d[n].objects[i].y;
+					emd.ld[n].objects[i].width = d[n].objects[i].w;
+					emd.ld[n].objects[i].height = d[n].objects[i].h;
+					emd.ld[n].objects[i].color = eldit_color_decode(d[n].objects[i].color);
+					emd.ld[n].objects[i].count = d[n].objects[i].count;
+					break;
+				default:
+					clog("Unsupported object found: emd.ld[n].objects["+i+"]");
+					emd.ld[n].objects[i]={};
+					break;
+				}
+			}
+		}
+	//var ts = emdldAsHTML();
+	//clog(ts);
+	//si("importpancont",ts);
+	showMaps();
+	}
+
+function emdldAsHTML() {
+	var s ="";
+
+	s = "<table class=\"table\" id=\"ldt\"><tr><th>Map Name</th><th>Actions</th></tr><tbody>";
+	s+= emdldTableBody();
+	s+= "</tbody></table>";
+	return s;
+	}
+
+function emdldTableBody() {
+	var s = "";
+
+	for (var ia=0;ia<emd.ld.length;ia++) {
+		s+="<tr><td>"+etbmn(emd.ld[ia])+"</td><td>"+etbac(ia)+"</td></tr>";
+		}
+	return s;
+
+	function etbmn(l) {
+		return (l.lvlname||"&lt;Unnamed Level&gt;");
+		}
+
+	function etbac(m) {
+		var s2 = "";
+
+		s2+=createButton("Load","emd_lm("+m+");",false,"default");
+		s2+=createButton("Delete","emd_dm("+m+");",false,"danger");
+		return s2;
+		}
+	}
+
+function emd_lm(i) {
+	emd.curLoad = i;
+	lvldata = emd.ld[i];
+	updateLvlName();
+	}
+
+function emd_dm(i) {
+	var n = i;
+	if (i>emd.curLoad) {
+		n--;
+		}
+	emd.ld.splice(i,1);
+	emd_lm(n);
+	}
+
+function htmlToElement(html) {
+    var template = document.createElement('template');
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
+function showMaps() {
+	var s = emdldAsHTML();
+
+	si("objinfo",createPanel("Maps",s,"mappan",{nbm: true}));
+	mapsShown=true;
 	}
